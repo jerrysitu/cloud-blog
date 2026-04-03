@@ -1,0 +1,407 @@
+---
+import { getCollection } from 'astro:content';
+
+const now = new Date();
+const allPosts = await getCollection('blog');
+const posts = allPosts
+  .filter((post) => post.data.publishedAt <= now)
+  .sort((a, b) => b.data.publishedAt.getTime() - a.data.publishedAt.getTime());
+
+const lead = posts[0];
+const sidebar = posts.slice(1, 4);
+const grid = posts.slice(4);
+
+function readTime(body: string | undefined): string {
+  if (!body) return '1 min';
+  return `${Math.max(1, Math.ceil(body.split(/\s+/).length / 200))} min`;
+}
+---
+
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Magazine — Design Demo</title>
+  <meta name="robots" content="noindex" />
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400;1,500&family=Inter:wght@400;500;600&display=swap');
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #f8f5f1;
+      --fg: #1c1013;
+      --fg-muted: #6b5650;
+      --accent: #e11d48;
+      --accent-light: #fecdd3;
+      --border: #e0d5c8;
+      --serif: 'Playfair Display', Georgia, serif;
+      --sans: 'Inter', sans-serif;
+    }
+
+    body {
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--fg);
+      line-height: 1.6;
+    }
+    a { color: inherit; text-decoration: none; }
+
+    .back-link {
+      position: fixed;
+      top: 1rem;
+      left: 1rem;
+      z-index: 100;
+      padding: 0.4rem 1rem;
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--accent);
+      border: 1px solid var(--accent);
+      transition: all 0.2s;
+    }
+    .back-link:hover { background: var(--accent); color: white; }
+
+    /* Masthead */
+    .masthead {
+      border-bottom: 1px solid var(--border);
+      text-align: center;
+      padding: 1.5rem 1.5rem;
+    }
+    .masthead-date {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      color: var(--fg-muted);
+    }
+    .masthead h1 {
+      font-family: var(--serif);
+      font-size: 2.5rem;
+      font-weight: 400;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-top: 0.5rem;
+    }
+    .masthead-sub {
+      font-size: 0.75rem;
+      font-style: italic;
+      color: var(--fg-muted);
+      margin-top: 0.3rem;
+    }
+    .masthead-rule {
+      width: 4rem;
+      height: 2px;
+      background: var(--accent);
+      margin: 1rem auto 0;
+    }
+
+    /* Hero */
+    .hero-spread {
+      max-width: 72rem;
+      margin: 0 auto;
+      padding: 3rem 2rem;
+      display: grid;
+      grid-template-columns: 3fr 2fr;
+      gap: 3rem;
+    }
+    @media (max-width: 768px) {
+      .hero-spread { grid-template-columns: 1fr; gap: 2rem; padding: 2rem 1.5rem; }
+    }
+
+    .hero-cover {
+      aspect-ratio: 3/4;
+      border-radius: 2px;
+      background: linear-gradient(135deg, var(--accent), #be123c, #9f1239);
+      padding: 2.5rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      color: white;
+      box-shadow: 0 20px 60px rgba(225,29,72,0.15);
+    }
+    .cover-top {
+      font-size: 0.65rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.3em;
+      opacity: 0.6;
+    }
+    .cover-rule {
+      width: 2rem;
+      height: 1px;
+      background: rgba(255,255,255,0.3);
+      margin-top: 0.75rem;
+    }
+    .cover-bottom-title {
+      font-family: var(--serif);
+      font-size: 5rem;
+      font-weight: 400;
+      line-height: 0.9;
+      opacity: 0.2;
+    }
+    .cover-bottom-count {
+      font-size: 0.65rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      opacity: 0.8;
+      margin-top: 0.75rem;
+    }
+
+    .hero-lead {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .lead-label {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      color: var(--accent);
+      margin-bottom: 1.5rem;
+    }
+    .lead-label::before {
+      content: '';
+      width: 2rem;
+      height: 2px;
+      background: var(--accent);
+    }
+    .hero-lead h2 {
+      font-family: var(--serif);
+      font-size: clamp(1.75rem, 3.5vw, 2.75rem);
+      font-weight: 400;
+      line-height: 1.2;
+    }
+    .hero-lead h2 em { font-weight: 400; }
+    .hero-lead .desc {
+      font-family: var(--serif);
+      font-size: 0.95rem;
+      color: var(--fg-muted);
+      margin-top: 1rem;
+      line-height: 1.7;
+    }
+    .hero-lead .meta {
+      font-size: 0.75rem;
+      color: var(--fg-muted);
+      margin-top: 1.5rem;
+      display: flex;
+      gap: 0.75rem;
+    }
+
+    /* Split section */
+    .split-section {
+      max-width: 72rem;
+      margin: 0 auto;
+      padding: 0 2rem 3rem;
+      display: grid;
+      grid-template-columns: 7fr 5fr;
+      gap: 0;
+      border-top: 1px solid var(--border);
+    }
+    @media (max-width: 768px) {
+      .split-section { grid-template-columns: 1fr; }
+    }
+
+    .split-main {
+      border-right: 1px solid var(--border);
+      padding-right: 2.5rem;
+      padding-top: 2rem;
+    }
+    @media (max-width: 768px) {
+      .split-main { border-right: none; padding-right: 0; }
+    }
+    .split-sidebar {
+      padding-left: 2.5rem;
+      padding-top: 2rem;
+    }
+    @media (max-width: 768px) {
+      .split-sidebar { padding-left: 0; border-top: 1px solid var(--border); }
+    }
+
+    .sidebar-item {
+      padding: 1.25rem 0;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      gap: 1rem;
+      align-items: flex-start;
+      transition: all 0.2s;
+    }
+    .sidebar-item:first-child { padding-top: 0; }
+    .sidebar-item:last-child { border-bottom: none; }
+    .sidebar-num {
+      font-family: var(--serif);
+      font-size: 1.75rem;
+      font-weight: 400;
+      color: var(--border);
+      line-height: 1;
+      flex-shrink: 0;
+    }
+    .sidebar-title {
+      font-family: var(--serif);
+      font-size: 0.95rem;
+      line-height: 1.35;
+      transition: color 0.2s;
+    }
+    .sidebar-item:hover .sidebar-title { color: var(--accent); }
+    .sidebar-desc {
+      font-size: 0.75rem;
+      color: var(--fg-muted);
+      margin-top: 0.3rem;
+      line-height: 1.5;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    /* Bottom grid */
+    .bottom-grid {
+      max-width: 72rem;
+      margin: 0 auto;
+      padding: 2rem 2rem 4rem;
+      border-top: 1px solid var(--border);
+    }
+    .bottom-grid-label {
+      font-size: 0.65rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      color: var(--fg-muted);
+      margin-bottom: 1.5rem;
+    }
+    .grid-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 1.5rem;
+    }
+    .grid-card {
+      padding: 1.5rem;
+      border: 1px solid var(--border);
+      transition: all 0.2s;
+    }
+    .grid-card:hover {
+      border-color: var(--accent);
+      box-shadow: 0 4px 20px rgba(225,29,72,0.08);
+    }
+    .grid-card-date {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--fg-muted);
+    }
+    .grid-card-title {
+      font-family: var(--serif);
+      font-size: 1rem;
+      line-height: 1.3;
+      margin-top: 0.4rem;
+      transition: color 0.2s;
+    }
+    .grid-card:hover .grid-card-title { color: var(--accent); }
+    .grid-card-desc {
+      font-size: 0.75rem;
+      color: var(--fg-muted);
+      margin-top: 0.5rem;
+      line-height: 1.5;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .grid-card-meta {
+      font-size: 0.65rem;
+      color: var(--fg-muted);
+      opacity: 0.6;
+      margin-top: 0.75rem;
+    }
+
+    /* Footer */
+    .footer {
+      border-top: 1px solid var(--border);
+      text-align: center;
+      padding: 2rem;
+      font-size: 0.7rem;
+      color: var(--fg-muted);
+      letter-spacing: 0.1em;
+    }
+  </style>
+</head>
+<body>
+
+  <a href="/demo/" class="back-link">&larr; All Demos</a>
+
+  <!-- Masthead -->
+  <div class="masthead">
+    <div class="masthead-date">Spring 2026</div>
+    <h1>AI Shop Blueprint</h1>
+    <div class="masthead-sub">The definitive guide to AI-powered ecommerce</div>
+    <div class="masthead-rule"></div>
+  </div>
+
+  <!-- Hero Spread -->
+  <div class="hero-spread">
+    <div class="hero-lead">
+      <div class="lead-label">Lead Story</div>
+      {lead && (
+        <a href={`/blog/${lead.id}/`}>
+          <h2><em>{lead.data.title}</em></h2>
+          <p class="desc">{lead.data.description}</p>
+          <div class="meta">
+            <time>{lead.data.publishedAt.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</time>
+            <span>&middot;</span>
+            <span>{readTime(lead.body)} read</span>
+          </div>
+        </a>
+      )}
+    </div>
+    <div class="hero-cover">
+      <div>
+        <div class="cover-top">Spring 2026</div>
+        <div class="cover-rule"></div>
+      </div>
+      <div>
+        <div class="cover-bottom-title">AI</div>
+        <div class="cover-bottom-count">{posts.length} Articles Inside</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Split: Main + Sidebar -->
+  <div class="split-section">
+    <div class="split-main">
+      <div class="bottom-grid-label">More Articles</div>
+      <div class="grid-cards">
+        {grid.map((post) => (
+          <a href={`/blog/${post.id}/`} class="grid-card">
+            <div class="grid-card-date">
+              {post.data.publishedAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+            </div>
+            <div class="grid-card-title">{post.data.title}</div>
+            <div class="grid-card-desc">{post.data.description}</div>
+            <div class="grid-card-meta">{readTime(post.body)} read &middot; {post.data.tags?.[0]}</div>
+          </a>
+        ))}
+      </div>
+    </div>
+    <div class="split-sidebar">
+      <div class="bottom-grid-label">Featured</div>
+      {sidebar.map((post, i) => (
+        <a href={`/blog/${post.id}/`} class="sidebar-item">
+          <span class="sidebar-num">{String(i + 2).padStart(2, '0')}</span>
+          <div>
+            <div class="sidebar-title">{post.data.title}</div>
+            <div class="sidebar-desc">{post.data.description}</div>
+          </div>
+        </a>
+      ))}
+    </div>
+  </div>
+
+  <div class="footer">
+    &copy; 2026 AI Shop Blueprint &middot; Magazine Edition
+  </div>
+
+</body>
+</html>

@@ -1,0 +1,153 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import JsonLd from '../../components/seo/JsonLd.astro';
+import { getBlogPostSchema, getBreadcrumbSchema } from '../../data/schemas';
+
+export async function getStaticPaths() {
+  const now = new Date();
+  const allPosts = await getCollection('blog');
+  const posts = allPosts.filter((post) => post.data.publishedAt <= now);
+  return posts.map((post) => ({
+    params: { slug: post.id },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+
+const siteUrl = 'https://cloud-blog.pages.dev';
+const postUrl = `${siteUrl}/blog/${post.id}/`;
+
+const formattedDate = post.data.publishedAt.toLocaleDateString('en-US', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+});
+
+const wordCount = post.body ? post.body.split(/\s+/).length : 0;
+const readingTime = Math.max(1, Math.ceil(wordCount / 200));
+---
+
+<BaseLayout
+  title={`${post.data.title} - AI Shop Blueprint`}
+  description={post.data.description}
+  currentPage="blog"
+  ogImage={post.data.image}
+  ogType="article"
+>
+  <JsonLd
+    schema={getBlogPostSchema(
+      post.data.title,
+      post.data.description,
+      postUrl,
+      post.data.publishedAt.toISOString(),
+      post.data.author,
+      post.data.image,
+    )}
+  />
+  <JsonLd
+    schema={getBreadcrumbSchema([
+      { name: 'Home', url: siteUrl },
+      { name: 'Blog', url: `${siteUrl}/blog` },
+      { name: post.data.title, url: postUrl },
+    ])}
+  />
+
+  <article class="mx-auto max-w-3xl px-4 py-12 sm:px-6 sm:py-16">
+    <!-- Breadcrumb -->
+    <nav aria-label="Breadcrumb" class="mb-10">
+      <ol class="flex items-center gap-2 text-sm text-gray-400 dark:text-gray-500">
+        <li>
+          <a href="/" class="transition-colors hover:text-gray-900 dark:hover:text-white">Home</a>
+        </li>
+        <li aria-hidden="true" class="text-gray-300 dark:text-gray-600">/</li>
+        <li>
+          <a href="/blog" class="transition-colors hover:text-gray-900 dark:hover:text-white">Blog</a>
+        </li>
+        <li aria-hidden="true" class="text-gray-300 dark:text-gray-600">/</li>
+        <li class="line-clamp-1 font-medium text-[#1e1b4b] dark:text-white" aria-current="page">
+          {post.data.title}
+        </li>
+      </ol>
+    </nav>
+
+    <!-- Header -->
+    <header class="relative mb-12">
+      <!-- Decorative background glow -->
+      <div class="pointer-events-none absolute -left-20 -top-10 h-40 w-40 rounded-full bg-[var(--color-accent)]/5 blur-3xl dark:bg-[var(--color-accent)]/10" aria-hidden="true"></div>
+
+      <div class="relative">
+        {post.data.tags && post.data.tags.length > 0 && (
+          <div class="mb-5 flex flex-wrap gap-2">
+            {post.data.tags.map((tag) => (
+              <a
+                href={`/blog/tags/${tag.toLowerCase().replace(/\s+/g, '-')}/`}
+                class="tag-pill"
+              >
+                {tag}
+              </a>
+            ))}
+          </div>
+        )}
+
+        <h1 class="font-display text-3xl leading-[1.15] tracking-tight text-[#1e1b4b] dark:text-white sm:text-4xl lg:text-5xl">
+          {post.data.title}
+        </h1>
+
+        <p class="mt-5 text-lg leading-relaxed text-gray-500 dark:text-gray-400">
+          {post.data.description}
+        </p>
+
+        <div class="mt-6 flex flex-wrap items-center gap-4 text-sm text-gray-400 dark:text-gray-500">
+          <!-- Author -->
+          <div class="flex items-center gap-2">
+            <div class="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--color-accent-light)] text-xs font-bold text-[var(--color-accent)] dark:bg-[var(--color-accent)]/15 dark:text-[var(--color-accent-muted)]">
+              {post.data.author.charAt(0)}
+            </div>
+            <span class="font-medium text-gray-600 dark:text-gray-300">{post.data.author}</span>
+          </div>
+          <span aria-hidden="true" class="h-1 w-1 rounded-full bg-gray-300 dark:bg-gray-600"></span>
+          <time datetime={post.data.publishedAt.toISOString()}>{formattedDate}</time>
+          <span aria-hidden="true" class="h-1 w-1 rounded-full bg-gray-300 dark:bg-gray-600"></span>
+          <span>{readingTime} min read</span>
+        </div>
+
+        <!-- Separator -->
+        <div class="mt-8 h-px bg-gradient-to-r from-[var(--color-accent)]/20 via-[var(--color-accent)]/10 to-transparent dark:from-[var(--color-accent)]/30 dark:via-[var(--color-accent)]/10"></div>
+      </div>
+    </header>
+
+    {post.data.image && (
+      <div class="mb-12 overflow-hidden rounded-2xl shadow-lg shadow-black/5 dark:shadow-black/30">
+        <img
+          src={post.data.image}
+          alt={post.data.title}
+          class="aspect-video w-full object-cover"
+        />
+      </div>
+    )}
+
+    <!-- Content -->
+    <div class="prose prose-lg prose-blog max-w-none">
+      <Content />
+    </div>
+
+    <!-- Footer -->
+    <footer class="mt-16">
+      <div class="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent dark:via-indigo-500/15"></div>
+      <div class="flex items-center justify-between pt-8">
+        <a
+          href="/blog"
+          class="group inline-flex items-center gap-2.5 rounded-xl border border-gray-200 bg-white px-5 py-2.5 text-sm font-medium text-gray-600 transition-all hover:border-[var(--color-accent)]/30 hover:text-[var(--color-accent)] dark:border-white/10 dark:bg-white/5 dark:text-gray-400 dark:hover:border-[var(--color-accent)]/30 dark:hover:text-[var(--color-accent-muted)]"
+        >
+          <svg class="h-4 w-4 transition-transform group-hover:-translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+          </svg>
+          Back to Blog
+        </a>
+      </div>
+    </footer>
+  </article>
+</BaseLayout>

@@ -1,0 +1,44 @@
+---
+import DarkModeToggle from '../ui/DarkModeToggle.astro';
+
+interface Props {
+  currentPage?: string;
+}
+
+const { currentPage } = Astro.props;
+---
+
+<header class="sticky top-0 z-50 border-b border-gray-200/80 bg-white/90 backdrop-blur-xl dark:border-gray-800/80 dark:bg-gray-950/90">
+  <nav class="mx-auto flex h-14 max-w-5xl items-center justify-between px-4 sm:px-6">
+    <a href="/" class="group flex items-center gap-2">
+      <span class="text-base font-semibold tracking-tight text-gray-900 dark:text-white">
+        AI Shop <span class="text-emerald-600 dark:text-emerald-400">Blueprint</span>
+      </span>
+    </a>
+
+    <div class="flex items-center gap-1">
+      <a
+        href="/blog"
+        class:list={[
+          'rounded-lg px-3 py-1.5 text-sm font-medium transition-all',
+          currentPage === 'blog'
+            ? 'bg-gray-100 text-gray-900 dark:bg-white/10 dark:text-white'
+            : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-white',
+        ]}
+      >
+        Blog
+      </a>
+      <a
+        href="/rss.xml"
+        class="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:text-gray-500 dark:hover:bg-white/5 dark:hover:text-gray-300 transition-all"
+        aria-label="RSS Feed"
+        target="_blank"
+      >
+        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 5c7.18 0 13 5.82 13 13M6 11a7 7 0 017 7m-6 0a1 1 0 11-2 0 1 1 0 012 0z"></path>
+        </svg>
+      </a>
+      <DarkModeToggle />
+    </div>
+  </nav>
+</header>

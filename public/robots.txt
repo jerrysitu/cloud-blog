@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://cloud-blog-2jk.pages.dev/sitemap-index.xml
